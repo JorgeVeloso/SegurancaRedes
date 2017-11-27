@@ -1,23 +1,28 @@
 package chatter;
 
   import java.awt.Color;
-  import java.awt.event.ActionEvent;
-  import java.awt.event.ActionListener;
-  import java.awt.event.KeyEvent;
-  import java.awt.event.KeyListener;
-  import java.io.BufferedReader;
-  import java.io.BufferedWriter;
-  import java.io.IOException;
-  import java.io.InputStream;
-  import java.io.InputStreamReader;
-  import java.io.OutputStream;
-  import java.io.OutputStreamWriter;
-  import java.io.Writer;
-  import java.net.Socket;
-  import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.Socket;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.swing.*;
 
 public class Client extends JFrame implements ActionListener, KeyListener {
-
 
 private static final long serialVersionUID = 1L;
 private JTextArea texto;
@@ -27,13 +32,19 @@ private JButton btnSair;
 private JLabel lblHistorico;
 private JLabel lblMsg;
 private JPanel pnlContent;
-private Socket socket;
-private OutputStream ou ;
-private Writer ouw; 
-private BufferedWriter bfw;
+private Socket socketCliente;
+
+private OutputStream output ;
+private Writer outputw; 
+private BufferedWriter buffer;
 private JTextField txtIP;
 private JTextField txtPorta;
-private JTextField txtNome;      
+private JTextField txtNome;
+private KeyPairGenerator assimetrica; 
+private PrivateKey chavePrivada;
+private PublicKey chavePublica;
+private PublicKey chaveDestinatario;
+private SecretKey chaveSecreta;
 
   public Client() throws IOException{                  
     JLabel lblMessage = new JLabel("Verificar!");
@@ -77,45 +88,32 @@ private JTextField txtNome;
      setDefaultCloseOperation(EXIT_ON_CLOSE);
 }
 
- /***
-  * Método usado para conectar no server socket, retorna IO Exception caso dê algum erro.
-  * @throws IOException
-  */
-public void conectar() throws IOException{
+  public void conectar() throws IOException{
                           
-  socket = new Socket(txtIP.getText(),Integer.parseInt(txtPorta.getText()));
-  ou = socket.getOutputStream();
-  ouw = new OutputStreamWriter(ou);
-  bfw = new BufferedWriter(ouw);
-  bfw.write(txtNome.getText()+"\r\n");
-  bfw.flush();
+  socketCliente = new Socket(txtIP.getText(),Integer.parseInt(txtPorta.getText()));
+  output = socketCliente.getOutputStream();
+  outputw = new OutputStreamWriter(output);
+  buffer = new BufferedWriter(outputw);
+  buffer.write(txtNome.getText()+"\r\n");
+  buffer.flush();
 }
 
-/***
-  * Método usado para enviar mensagem para o server socket
-  * @param msg do tipo String
-  * @throws IOException retorna IO Exception caso dê algum erro.
-  */
   public void enviarMensagem(String msg) throws IOException{
                           
     if(msg.equals("Sair")){
-      bfw.write("Desconectado \r\n");
+      buffer.write("Desconectado \r\n");
       texto.append("Desconectado \r\n");
     }else{
-      bfw.write(msg+"\r\n");
-      texto.append( txtNome.getText() + " diz -> " +         txtMsg.getText()+"\r\n");
+      buffer.write(msg+"\r\n");
+      texto.append( txtNome.getText() + " diz -> " + txtMsg.getText()+"\r\n");
     }
-     bfw.flush();
+     buffer.flush();
      txtMsg.setText("");        
 }
 
-/**
- * Método usado para receber mensagem do servidor
- * @throws IOException retorna IO Exception caso dê algum erro.
- */
 public void escutar() throws IOException{
                           
-   InputStream in = socket.getInputStream();
+   InputStream in = socketCliente.getInputStream();
    InputStreamReader inr = new InputStreamReader(in);
    BufferedReader bfr = new BufferedReader(inr);
    String msg = "";
@@ -131,17 +129,13 @@ public void escutar() throws IOException{
         }
 }           
 
-  /***
-   * Método usado quando o usuário clica em sair
-   * @throws IOException retorna IO Exception caso dê algum erro.
-   */
    public void sair() throws IOException{
                           
     enviarMensagem("Sair");
-    bfw.close();
-    ouw.close();
-    ou.close();
-    socket.close();
+    buffer.close();
+    outputw.close();
+    output.close();
+    socketCliente.close();
  }
 
 public void actionPerformed(ActionEvent e) {
@@ -177,11 +171,10 @@ public void keyReleased(KeyEvent arg0) {
 public void keyTyped(KeyEvent arg0) {
   // TODO Auto-generated method stub               
 }           
-  public static void main(String []args) throws IOException{
-              
+public static void main(String []args) throws IOException{
    Client app = new Client();
    app.conectar();
    app.escutar();
-}
- }           
+  }
+}           
 

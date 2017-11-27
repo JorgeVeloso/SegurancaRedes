@@ -63,9 +63,7 @@ public void run(){
      e.printStackTrace();
    
    }                       
-}           
-
-
+}        
 public void sendToAll(BufferedWriter bwSaida, String msg) throws  IOException 
 {
   BufferedWriter bwS;
@@ -84,7 +82,7 @@ public static void main(String []args) {
   try{
     //Cria os objetos necessário para instânciar o servidor
     JLabel lblMessage = new JLabel("Porta do Servidor:");
-    JTextField txtPorta = new JTextField("123");
+    JTextField txtPorta = new JTextField("12345");
     Object[] texts = {lblMessage, txtPorta };  
     JOptionPane.showMessageDialog(null, texts);
     server = new ServerSocket(Integer.parseInt(txtPorta.getText()));
@@ -97,7 +95,7 @@ public static void main(String []args) {
        Socket con = server.accept();
        System.out.println("Cliente conectado...");
        Thread t = new Server(con);
-        t.start();   
+       t.start();   
     }
                              
   }catch (Exception e) {
